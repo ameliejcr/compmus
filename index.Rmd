@@ -13,10 +13,77 @@ library(ggplot2)
 library(spotifyr)
 library(compmus)
 library(plotly)
+library(cowplot)
 
 corpus_features <- get_playlist_audio_features("", '6iRQ0PFwwV932O3MjgkI5g')
 ```
 
+
+### Third visualisation
+
+```{r}
+tnwm <-
+  get_tidy_audio_analysis("0QZ5yyl6B6utIWkxeBDxQN") |> # Change URI.
+  compmus_align(bars, segments) |>                     # Change `bars`
+  select(bars) |>                                      #   in all three
+  unnest(bars) |>                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+tnwmplot1 <- tnwm |>
+  compmus_gather_timbre() |>
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic()
+
+tnwmch <-
+  get_tidy_audio_analysis("0QZ5yyl6B6utIWkxeBDxQN") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+
+tnwmchplot2 <- tnwmch |>
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+  compmus_gather_chroma() |> 
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  scale_fill_viridis_c()
+
+plot_grid(tnwmplot1, tnwmchplot2, ncol = 1)
+```
+
+***
+As stated in the introduction, one of the typical songs of this corpus is 'The night we met' by Lord Huron. The first plot is a cepstrogram depicting that song. The summarisation level of this graph is bars, since that provided the clearest patterns. The second plot is a chromagram of the same song.
 
 
 ### Introduction
@@ -86,4 +153,5 @@ compmus_long_distance(
 ```
 
 ***
-This graph depicts two performances of 'All too well' by Taylor Swift. 
+This graph depicts two performances of 'All too well' by Taylor Swift.
+
