@@ -18,6 +18,24 @@ library(cowplot)
 corpus_features <- get_playlist_audio_features("", '6iRQ0PFwwV932O3MjgkI5g')
 ```
 
+
+### Fifth visualisation
+```{r}
+lrpd <- get_tidy_audio_analysis("57V4uc2b2diZ4RPHXWecb9")
+
+lrpd |>
+  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+```
+
+***
+One of the artists featured most in my corpus is Hozier, and one of his songs that is typical for this corpus is 'Like Real People Do', which is visualised here in the form of a tempogram. It shows that the tempo, which is around 140 BPM, remains fairly constant throughout the song.
+
+
 ### Fourth visualisation
 ```{r}
 circshift <- function(v, n) {
